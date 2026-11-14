@@ -55,7 +55,7 @@ def tts(parts, path):
         for i, ((v, rate), text) in enumerate(parts):
             mp3 = work / f"{path.stem}_{i}.mp3"; wav = work / f"{path.stem}_{i}.wav"
             run(EDGE, "-v", v, f"--rate={rate}", "-t", text, "--write-media", str(mp3))
-            run("ffmpeg","-y","-i",str(mp3),"-ar","44100","-ac","1",str(wav))
+            run("ffmpeg","-y","-i",str(mp3),"-af","silenceremove=start_periods=1:start_threshold=-45dB,areverse,silenceremove=start_periods=1:start_threshold=-45dB,areverse","-ar","44100","-ac","1",str(wav))
             f.write(f"file '{wav}'\n")
             if i < len(parts) - 1: f.write(f"file '{gap}'\n")
     run("ffmpeg","-y","-f","concat","-safe","0","-i",str(lst),"-ar","44100","-ac","1",str(path))
@@ -108,24 +108,24 @@ for i, (src, a, b, cap, voice, maxsp) in enumerate(SCENES):
                       ("github.com/Koooon-and-meemee/ontime-pickup", 22, 500, (154, 167, 184))], png)
         else:
             card_png([("현대자동차그룹 차량용 앱 개발 공모전 · Pleos Playground", 24, 500, (154, 167, 184))], png)
-        T = vl + 1.2
+        T = vl + 0.6
         run("ffmpeg","-y","-loop","1","-framerate","30","-i",str(png),"-i",str(wav),
-            "-filter_complex",f"[0:v]fade=t=in:st=0:d=0.4,fade=t=out:st={T-0.4:.2f}:d=0.4,format=yuv420p[v];[1:a]adelay=500|500,apad[a]",
+            "-filter_complex",f"[0:v]fade=t=in:st=0:d=0.25,fade=t=out:st={T-0.25:.2f}:d=0.25,format=yuv420p[v];[1:a]adelay=200|200,apad[a]",
             "-map","[v]","-map","[a]","-t",f"{T:.2f}","-r","30","-c:v","libx264","-preset","medium","-crf","18","-c:a","aac","-b:a","160k","-ar","44100","-ac","2",str(out))
     else:
-        target = vl + 0.7
-        if src in STORY:
-            b = min(b, a + max(4.8, vl + 1.0)); sp = 1.0
+        # 오디오가 비지 않게: 장면 길이 = 내레이션 + 짧은 숨. 화면은 그 길이에 맞춰 배속(최소 1배)
+        target = vl + 0.35
+        if src in STORY: b = min(b, a + max(target, 3.2))
         src_len = b - a
-        if src not in STORY: sp = min(maxsp, max(TEMPO, src_len / target))
+        sp = max(1.0, src_len / target)
         vid_len = src_len / sp
-        T = max(vid_len, target)
-        hold = T - vid_len
+        T = target
+        hold = max(0.0, T - vid_len)
         band = work / f"s{i:02d}_band.png"; band_png(cap, band)
         ch = H - BAND; cw = round(ch * 16 / 9 / 2) * 2
         vf = (f"[0:v]trim=start={a}:end={b},setpts=(PTS-STARTPTS)/{sp},fps=30,scale={cw}:{ch}:flags=lanczos,"
               f"tpad=stop_mode=clone:stop_duration={hold+0.1:.2f},pad={W}:{H}:{(W-cw)//2}:0:color=0x0E1A2B[c];"
-              f"[c][1:v]overlay=0:0,format=yuv420p[v];[2:a]adelay=250|250,apad[a]")
+              f"[c][1:v]overlay=0:0,format=yuv420p[v];[2:a]adelay=120|120,apad[a]")
         run("ffmpeg","-y","-i",src,"-loop","1","-i",str(band),"-i",str(wav),"-filter_complex",vf,
             "-map","[v]","-map","[a]","-t",f"{T:.2f}","-r","30","-c:v","libx264","-preset","medium","-crf","18",
             "-c:a","aac","-b:a","160k","-ar","44100","-ac","2",str(out))
