@@ -12,7 +12,7 @@
 현대자동차그룹 차량용 앱 개발 공모전(Pleos Playground) 출품작 · 대학생 부문 · 개인 참가(박상원)
 
 - APK: [`apk/박상원_OnTimePickup_release.apk`](apk/)
-- 시연 영상: [`demo/OnTimePickup_demo.mp4`](demo/OnTimePickup_demo.mp4) (1분 27초, 한국어 내레이션: Pleos Connect 에뮬레이터 실제 주문 → 매장 대시보드 → 정체 시나리오 30배속)
+- 시연 영상: [`demo/OnTimePickup_demo.mp4`](demo/OnTimePickup_demo.mp4) (2분 9초, 한국어 내레이션: 문제 상황 → Pleos Connect 에뮬레이터 실제 주문 → 매장 대시보드 → 정체 시나리오 30배속 → 차 앞 픽업)
 
 | 차량 화면 (Pleos Connect Emulator, 실제 내비 ETA) | 매장 대시보드 (정체 시나리오, 30배속) |
 |---|---|
