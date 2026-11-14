@@ -1,0 +1,54 @@
+{
+  "packageName": "com.ontimepickup.app",
+  "appDescription": "An in-car takeout ordering app that times food preparation to the car's live navigation ETA, so the order is ready the moment the driver arrives at the store.",
+  "invokeWord": "온타임픽업",
+  "version": "0.1.0",
+  "actionCalls": [
+    {
+      "type": "function",
+      "function": {
+        "name": "ORDER_USUAL",
+        "description": "Place the user's saved favorite takeout order at a store along the current route. Use when the user says things like 'order my usual' or 'the usual chicken on the way home'.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "favoriteName": {
+              "type": "string",
+              "description": "Name or food category of the saved favorite order the user mentioned, such as 'chicken' or 'pizza'. Empty if the user just said 'my usual'."
+            }
+          },
+          "required": []
+        },
+        "component": "service"
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "FIND_PICKUP_STORE",
+        "description": "Find takeout stores of the requested food category on or near the current navigation route and show them so the user can choose when the car is stopped.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "category": {
+              "type": "string",
+              "description": "Food category the user wants to pick up.",
+              "enum": ["chicken", "pizza", "chinese", "korean_soup", "any"]
+            }
+          },
+          "required": ["category"]
+        },
+        "component": "service"
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "CANCEL_PICKUP_ORDER",
+        "description": "Cancel the user's current takeout order if the store has not started cooking yet.",
+        "parameters": {"type": "object", "properties": {}, "required": []},
+        "component": "service"
+      }
+    }
+  ]
+}

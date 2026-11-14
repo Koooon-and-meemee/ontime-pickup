@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>온타임 픽업 매장</title>
+<style>
+  @font-face { font-family:"Asta Sans"; src:url("/static/fonts/AstaSans.ttf") format("truetype"); font-weight:300 800; font-display:block; }
+  :root {
+    --canvas:#F7F8FA; --card:#FFFFFF; --control:#EDEEF2; --control-pressed:#E0E1E6; --outline:rgba(19,20,23,.08);
+    --text:#131417; --text2:rgba(19,20,23,.84); --text3:rgba(19,20,23,.64); --text4:rgba(19,20,23,.32);
+    --inverse:#313236; --inverse-text:#FFFFFF;
+    --wait:#0064FF; --cook:#FF8A00; --ready:#02C265; --negative:#FE3D16;
+    --shadow:0 6px 24px rgba(0,0,0,.08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --canvas:#131417; --card:#1D1E21; --control:#313236; --control-pressed:#44464E; --outline:rgba(255,255,255,.08);
+      --text:#FFFFFF; --text2:rgba(255,255,255,.84); --text3:rgba(255,255,255,.64); --text4:rgba(255,255,255,.32);
+      --inverse:#EDEEF2; --inverse-text:#131417;
+      --wait:#0082FF; --cook:#FF8A00; --ready:#00E074; --negative:#FF4C28;
+      --shadow:0 8px 32px rgba(0,0,0,.16);
+    }
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--canvas); color:var(--text); font-family:"Asta Sans",-apple-system,"Apple SD Gothic Neo",sans-serif;
+         -webkit-font-smoothing:antialiased; }
+  svg.i { width:1em; height:1em; fill:currentColor; flex:none; }
+
+  header { display:flex; align-items:center; gap:20px; padding:28px 40px 20px; }
+  .app { width:64px; height:64px; border-radius:18px; display:grid; place-items:center; color:#fff; font-size:36px;
+         background:linear-gradient(135deg,#FFAA00,#FF4C28); box-shadow:var(--shadow); }
+  .title h1 { margin:0; font-size:32px; font-weight:700; letter-spacing:-.2px; }
+  .title p { margin:4px 0 0; font-size:20px; color:var(--text3); }
+  .spacer { flex:1; }
+  .counts { display:flex; gap:10px; }
+  .count { display:flex; align-items:center; gap:10px; padding:10px 18px; border-radius:999px; background:var(--card);
+           border:1.5px solid var(--outline); font-size:20px; font-weight:700; }
+  .count .dot { width:12px; height:12px; border-radius:50%; }
+  .count b { font-variant-numeric:tabular-nums; }
+  .clock { font-size:24px; font-weight:700; color:var(--text3); font-variant-numeric:tabular-nums; min-width:120px; text-align:right; }
+
+  main { padding:8px 40px 40px; display:grid; gap:24px; grid-template-columns:repeat(auto-fill,minmax(400px,1fr)); }
+  .card { position:relative; background:var(--card); border:1.5px solid var(--outline); border-radius:32px; padding:28px;
+          box-shadow:var(--shadow); overflow:hidden; transition:border-color .3s, box-shadow .3s; }
+  .card::before { content:""; position:absolute; inset:0 0 auto 0; height:140px; pointer-events:none;
+                  background:linear-gradient(180deg, color-mix(in srgb, var(--accent) 14%, transparent), transparent); }
+  .card.arrived { border-color:var(--ready); box-shadow:0 0 0 3px color-mix(in srgb, var(--ready) 35%, transparent), var(--shadow); }
+  .card > * { position:relative; }
+
+  .top { display:flex; justify-content:space-between; align-items:center; }
+  .plate { display:flex; align-items:center; gap:10px; font-size:26px; font-weight:800; letter-spacing:.5px; }
+  .plate svg { font-size:30px; color:var(--text3); }
+  .chip { display:inline-flex; align-items:center; gap:10px; padding:10px 18px; border-radius:999px; font-size:20px; font-weight:700;
+          color:var(--accent); background:color-mix(in srgb, var(--accent) 14%, transparent); }
+  .chip .dot { width:12px; height:12px; border-radius:50%; background:var(--accent); }
+  .items { margin:12px 0 0; font-size:22px; color:var(--text3); }
+
+  .hero { margin-top:24px; }
+  .hero .label { font-size:22px; font-weight:700; color:var(--text3); }
+  .hero .big { font-size:72px; font-weight:800; line-height:1.05; letter-spacing:-1px; font-variant-numeric:tabular-nums; margin-top:4px; }
+  .hero .big.word { font-size:56px; letter-spacing:-.5px; }
+
+  .shift { display:flex; align-items:center; gap:10px; margin-top:16px; padding:12px 16px; border-radius:16px; font-size:20px; font-weight:700; }
+  .shift.late { color:var(--cook); background:color-mix(in srgb, var(--cook) 12%, transparent); }
+  .shift.early { color:var(--wait); background:color-mix(in srgb, var(--wait) 12%, transparent); }
+  .shift svg { font-size:24px; }
+
+  .eta { display:flex; align-items:center; gap:10px; margin-top:20px; font-size:22px; color:var(--text3); }
+  .eta b { color:var(--text); font-variant-numeric:tabular-nums; font-weight:800; }
+  .eta svg { font-size:26px; }
+
+  .steps { display:grid; grid-template-columns:repeat(4,1fr); margin-top:24px; }
+  .step { display:flex; flex-direction:column; align-items:center; gap:10px; font-size:18px; color:var(--text3); }
+  .step .track { position:relative; width:100%; height:28px; display:grid; place-items:center; }
+  .step .track::before, .step .track::after { content:""; position:absolute; top:50%; height:4px; width:50%; transform:translateY(-50%); background:var(--control); }
+  .step .track::before { left:0; } .step .track::after { right:0; }
+  .step:first-child .track::before, .step:last-child .track::after { background:transparent; }
+  .step.done .track::before { background:var(--accent); }
+  .step.done.past .track::after { background:var(--accent); }
+  .step .node { position:relative; z-index:1; width:16px; height:16px; border-radius:50%; background:var(--control); }
+  .step.done .node { background:var(--accent); }
+  .step.now .node { width:28px; height:28px; box-shadow:0 0 0 6px color-mix(in srgb, var(--accent) 30%, transparent); }
+  .step.done { color:var(--text); } .step.now { font-weight:700; }
+
+  .arrive { display:flex; align-items:center; gap:10px; margin-top:20px; padding:14px 18px; border-radius:18px; font-size:22px; font-weight:800;
+            color:var(--ready); background:color-mix(in srgb, var(--ready) 14%, transparent); }
+  .arrive svg { font-size:28px; }
+
+  .btns { display:flex; gap:12px; margin-top:24px; }
+  button { flex:1; height:68px; border:0; border-radius:20px; font:700 22px "Asta Sans",sans-serif; cursor:pointer;
+           background:var(--control); color:var(--text); transition:transform .09s, background .15s; }
+  button.primary { background:var(--inverse); color:var(--inverse-text); }
+  button:active { transform:scale(.95); background:var(--control-pressed); }
+  button.primary:active { background:var(--inverse); opacity:.86; }
+
+  .empty { grid-column:1/-1; display:flex; flex-direction:column; align-items:center; gap:16px; padding:96px 0; color:var(--text3); font-size:26px; font-weight:700; }
+  .empty svg { font-size:72px; color:var(--text4); }
+</style>
+</head>
+<body>
+<header>
+  <div class="app"><svg class="i" viewBox="0 -960 960 960"><path d="m192-565-92-97q-8-9-8-21t9-21q9-9 21.5-9t21.5 9l71 73-2-23q-2-14 2.5-26t14.5-22l118-120q8-8 19.5-13t23.5-5h178q12 0 23.5 5t19.5 13l118 120q10 10 14.5 22t2.5 26l-2 23 71-73q9-9 21.5-9t21.5 9q9 9 9 21t-8 21l-92 97H192Zm464 405H304q-23 0-40.5-16.5T244-216l-24-320h520l-24 320q-2 23-19.5 39.5T656-160Z"/></svg></div>
+  <div class="title"><h1 id="store">매장</h1><p>차량 도착 시각에 맞춰 조리 시작이 자동으로 바뀝니다</p></div>
+  <div class="spacer"></div>
+  <div class="counts" id="counts"></div>
+  <div class="clock" id="clock"></div>
+</header>
+<main id="list"></main>
+<script>
+const ICON = {
+  car: `<svg class="i" viewBox="0 -960 960 960"><path d="M200-204v44q0 16.67-11.74 28.33Q176.53-120 159.76-120q-16.76 0-28.26-11.67Q120-143.33 120-160v-304q0-4.67.5-9.33.5-4.67 2.5-9.67l78-236q6-19 21.75-30T258-760h444q19.5 0 35.25 11T759-719l78 236q2 5 2.5 9.67.5 4.66.5 9.33v304q0 16.67-11.74 28.33Q816.53-120 799.76-120 783-120 771-131.96T759-161v-43H200Zm3-330h554l-55-166H258l-55 166Zm82.76 220q23.24 0 38.74-15.75Q340-345.5 340-368q0-23.33-15.75-39.67Q308.5-424 286-424q-23.33 0-39.67 16.26Q230-391.47 230-368.24q0 23.24 16.26 38.74 16.27 15.5 39.5 15.5ZM675-314q23.33 0 39.67-15.75Q731-345.5 731-368q0-23.33-16.26-39.67Q698.47-424 675.24-424q-23.24 0-38.74 16.26-15.5 16.27-15.5 39.5 0 23.24 15.75 38.74Q652.5-314 675-314Z"/></svg>`,
+  timer: `<svg class="i" viewBox="0 -960 960 960"><path d="M390-860q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h180q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H390Zm90.18 447q12.82 0 21.32-8.63 8.5-8.62 8.5-21.37v-170q0-12.75-8.68-21.38-8.67-8.62-21.5-8.62-12.82 0-21.32 8.62-8.5 8.63-8.5 21.38v170q0 12.75 8.68 21.37 8.67 8.63 21.5 8.63ZM480-81q-74 0-139.5-28.5T226-187q-49-49-77.5-114.5T120-441q0-74 28.5-139.5T226-695q49-49 114.5-77.5T480-801q67 0 126 22.5T711-716l30-30q9-9 21-9t21 9q9 9 9 21t-9 21l-30 30q36 40 61.5 97T840-441q0 74-28.5 139.5T734-187q-49 49-114.5 77.5T480-81Zm0-60q125 0 212.5-87.5T780-441q0-125-87.5-212.5T480-741q-125 0-212.5 87.5T180-441q0 125 87.5 212.5T480-141Zm0-299Z"/></svg>`,
+  check: `<svg class="i" viewBox="0 -960 960 960"><path d="m421-389-98-98q-9-9-22-9t-23 10q-9 9-9 22t9 22l122 123q9 9 21 9t21-9l239-239q10-10 10-23t-10-23q-10-9-23.5-8.5T635-603L421-389Zm59 309q-82 0-155-31.5t-127.5-86Q143-252 111.5-325T80-480q0-83 31.5-156t86-127Q252-817 325-848.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 82-31.5 155T763-197.5q-54 54.5-127 86T480-80Z"/></svg>`,
+  clock: `<svg class="i" viewBox="0 -960 960 960"><path d="M513-492v-171q0-13-8.5-21.5T483-693q-13 0-21.5 8.5T453-663v183q0 6 2 11t6 10l144 149q9 10 22.5 9.5T650-310q9-9 9-22t-9-22L513-492ZM480-80q-82 0-155-31.5t-127.5-86Q143-252 111.5-325T80-480q0-82 31.5-155t86-127.5Q252-817 325-848.5T480-880q82 0 155 31.5t127.5 86Q817-708 848.5-635T880-480q0 82-31.5 155t-86 127.5Q708-143 635-111.5T480-80Zm0-400Zm0 340q140 0 240-100t100-240q0-140-100-240T480-820q-140 0-240 100T140-480q0 140 100 240t240 100Z"/></svg>`,
+  bag: `<svg class="i" viewBox="0 -960 960 960"><path d="m192-565-92-97q-8-9-8-21t9-21q9-9 21.5-9t21.5 9l71 73-2-23q-2-14 2.5-26t14.5-22l118-120q8-8 19.5-13t23.5-5h178q12 0 23.5 5t19.5 13l118 120q10 10 14.5 22t2.5 26l-2 23 71-73q9-9 21.5-9t21.5 9q9 9 9 21t-8 21l-92 97H192Zm464 405H304q-23 0-40.5-16.5T244-216l-24-320h520l-24 320q-2 23-19.5 39.5T656-160Z"/></svg>`,
+};
+const sid = location.pathname.split('/').pop();
+const STATUS = { SCHEDULED:'조리 대기', COOKING:'조리 중', READY:'준비 완료', PICKED_UP:'전달 완료', CANCELLED:'취소' };
+const ACCENT = { SCHEDULED:'var(--wait)', COOKING:'var(--cook)', READY:'var(--ready)', PICKED_UP:'var(--text4)', CANCELLED:'var(--text4)' };
+const STEP = { SCHEDULED:0, COOKING:1, READY:2, PICKED_UP:3, CANCELLED:-1 };
+const mmss = s => { s = Math.max(0, Math.round(s)); return `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`; };
+
+async function act(id, st) { await fetch(`/orders/${id}/status/${st}`, {method:'POST'}); tick(); }
+
+function shift(o) {
+  const h = o.etaHistory;
+  if (h.length < 2) return '';
+  const first = h[0].at + h[0].remainSec, last = h[h.length-1].at + h[h.length-1].remainSec;
+  const scale = (o.store.prepMin * 60) / o.prepSec;  // 시연용 시간 압축(TIME_SCALE)을 실제 분으로 되돌림
+  const d = Math.round((last - first) * scale / 60);
+  if (Math.abs(d) < 1) return '';
+  return d > 0
+    ? `<div class="shift late">${ICON.timer}교통 정체로 도착 ${d}분 늦어짐 · 조리 시작도 자동으로 미룸</div>`
+    : `<div class="shift early">${ICON.timer}도착 ${-d}분 빨라짐 · 조리 시작을 당김</div>`;
+}
+
+function hero(o) {
+  if (o.status === 'SCHEDULED') return `<div class="label">조리 시작까지</div><div class="big">${mmss(o.secToCookStart)}</div>`;
+  if (o.status === 'COOKING') return `<div class="label">조리 완료까지</div><div class="big">${mmss(o.cookingSince + o.prepSec - o.now)}</div>`;
+  if (o.status === 'READY') return `<div class="label">따뜻할 때 전달하세요</div><div class="big word">준비 완료</div>`;
+  return `<div class="label">&nbsp;</div><div class="big word">${STATUS[o.status]}</div>`;
+}
+
+function steps(o) {
+  const cur = o.carArrived ? 3 : STEP[o.status];
+  return `<div class="steps">${['주문','조리','준비 완료','도착'].map((t,i) =>
+    `<div class="step ${i<=cur?'done':''} ${i<cur?'past':''} ${i===cur?'now':''}"><div class="track"><div class="node"></div></div>${t}</div>`).join('')}</div>`;
+}
+
+function card(o) {
+  const arrived = o.carArrived && o.status !== 'PICKED_UP';
+  const btns = {
+    SCHEDULED: [['COOKING','지금 조리 시작',''],['CANCELLED','취소','']],
+    COOKING: [['READY','준비 완료','primary']],
+    READY: [['PICKED_UP','차량에 전달','primary']],
+  }[o.status] || [];
+  return `<div class="card ${arrived ? 'arrived' : ''}" style="--accent:${arrived ? 'var(--ready)' : ACCENT[o.status]}">
+    <div class="top"><span class="plate">${ICON.car}${o.carPlate}</span><span class="chip"><span class="dot"></span>${STATUS[o.status]}</span></div>
+    <div class="items">${o.items.map(i=>i.name).join(', ')} · ${o.total.toLocaleString()}원 · 사전결제</div>
+    <div class="hero">${hero(o)}</div>
+    ${shift(o)}
+    ${arrived ? `<div class="arrive">${ICON.check}차량이 매장 앞에 도착했어요</div>`
+              : `<div class="eta">${ICON.clock}차량 도착까지 <b>${mmss(o.secToArrive)}</b></div>`}
+    ${steps(o)}
+    ${btns.length ? `<div class="btns">${btns.map(([s,t,c])=>`<button class="${c}" onclick="act('${o.id}','${s}')">${t}</button>`).join('')}</div>` : ''}
+  </div>`;
+}
+
+function counts(orders) {
+  const n = s => orders.filter(o => o.status === s).length;
+  return [['SCHEDULED','대기'],['COOKING','조리'],['READY','준비']].map(([s,t]) =>
+    `<span class="count"><span class="dot" style="background:${ACCENT[s]}"></span>${t} <b>${n(s)}</b></span>`).join('');
+}
+
+async function tick() {
+  document.getElementById('clock').textContent = new Date().toLocaleTimeString('ko-KR', {hour:'2-digit', minute:'2-digit'});
+  try {
+    const [stores, orders] = await Promise.all([
+      fetch('/stores').then(r=>r.json()), fetch(`/stores/${sid}/orders`).then(r=>r.json())]);
+    const s = stores.find(x=>x.id===sid);
+    if (s) document.getElementById('store').textContent = `${s.name} · 평균 조리 ${s.prepMin}분`;
+    const live = orders.filter(o => o.status !== 'CANCELLED');
+    document.getElementById('counts').innerHTML = counts(live);
+    document.getElementById('list').innerHTML = live.length ? live.map(card).join('')
+      : `<div class="empty">${ICON.bag}주문을 기다리는 중</div>`;
+  } catch (e) { /* 서버 재시작 중 */ }
+}
+tick(); setInterval(tick, 1000);
+</script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+<resources>
+    <style name="Theme.OnTimePickup" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="android:windowBackground">@color/pleos_canvas</item>
+        <item name="android:statusBarColor">@color/pleos_canvas</item>
+        <item name="android:navigationBarColor">@color/pleos_canvas</item>
+    </style>
+</resources>
