@@ -117,13 +117,9 @@ class MainActivity : AppCompatActivity() {
         addView(etaChip, LinearLayout.LayoutParams(WRAP, dp(60)))
     }
 
-    private fun appIcon(size: Int) = FrameLayout(this).apply {
-        background = Pleos.gradient(
-            this@MainActivity, size * 0.28f, Color.parseColor("#FFAA00"), Color.parseColor("#FF4C28"),
-            orientation = GradientDrawable.Orientation.TL_BR,
-        )
-        val glyph = (size * 0.56f).toInt()
-        addView(icon(R.drawable.ic_takeout, Color.WHITE), FrameLayout.LayoutParams(dp(glyph), dp(glyph), Gravity.CENTER))
+    private fun appIcon(size: Int) = ImageView(this).apply {
+        setImageResource(R.drawable.ic_brand)
+        contentDescription = "온타임 픽업"
         elevate(2)
     }
 

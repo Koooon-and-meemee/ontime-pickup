@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>온타임 픽업 매장</title>
+<link rel="icon" href="/static/logo.svg" type="image/svg+xml">
 <style>
   @font-face { font-family:"Asta Sans"; src:url("/static/fonts/AstaSans.ttf") format("truetype"); font-weight:300 800; font-display:block; }
   :root {
@@ -28,9 +29,10 @@
   svg.i { width:1em; height:1em; fill:currentColor; flex:none; }
 
   header { display:flex; align-items:center; gap:20px; padding:28px 40px 20px; }
-  .app { width:64px; height:64px; border-radius:18px; display:grid; place-items:center; color:#fff; font-size:36px;
-         background:linear-gradient(135deg,#FFAA00,#FF4C28); box-shadow:var(--shadow); }
-  .title h1 { margin:0; font-size:32px; font-weight:700; letter-spacing:-.2px; }
+  .app { width:64px; height:64px; flex:none; filter:drop-shadow(0 4px 10px rgba(14,26,43,.25)); }
+  .app svg { width:100%; height:100%; display:block; }
+  .brand { font-size:15px; font-weight:800; letter-spacing:.2px; color:var(--text3); margin:0 0 2px; }
+  .brand b { color:#12A882; }
   .title p { margin:4px 0 0; font-size:20px; color:var(--text3); }
   .spacer { flex:1; }
   .counts { display:flex; gap:10px; }
@@ -100,8 +102,8 @@
 </head>
 <body>
 <header>
-  <div class="app"><svg class="i" viewBox="0 -960 960 960"><path d="m192-565-92-97q-8-9-8-21t9-21q9-9 21.5-9t21.5 9l71 73-2-23q-2-14 2.5-26t14.5-22l118-120q8-8 19.5-13t23.5-5h178q12 0 23.5 5t19.5 13l118 120q10 10 14.5 22t2.5 26l-2 23 71-73q9-9 21.5-9t21.5 9q9 9 9 21t-8 21l-92 97H192Zm464 405H304q-23 0-40.5-16.5T244-216l-24-320h520l-24 320q-2 23-19.5 39.5T656-160Z"/></svg></div>
-  <div class="title"><h1 id="store">매장</h1><p>차량 도착 시각에 맞춰 조리 시작이 자동으로 바뀝니다</p></div>
+  <div class="app"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="112" fill="#0E1A2B"/><circle cx="256" cy="256" r="150" fill="none" stroke="#1E3350" stroke-width="30"/><path d="M256 106A150 150 0 1 1 126 181" fill="none" stroke="#3CE0B4" stroke-width="30" stroke-linecap="round"/><circle cx="126" cy="181" r="24" fill="#fff"/><path d="M198 188L207.7 200L217.3 188L227.0 200L236.7 188L246.3 200L256.0 188L265.7 200L275.3 188L285.0 200L294.7 188L304.3 200L314.0 188V324a12 12 0 0 1-12 12H210a12 12 0 0 1-12-12Z" fill="#fff"/><path d="M198 226H314" stroke="#0E1A2B" stroke-width="8"/></svg></div>
+  <div class="title"><div class="brand">OnTime <b>Pickup</b> · 매장</div><h1 id="store">매장</h1><p>차량 도착 시각에 맞춰 조리 시작이 자동으로 바뀝니다</p></div>
   <div class="spacer"></div>
   <div class="counts" id="counts"></div>
   <div class="clock" id="clock"></div>
@@ -113,7 +115,7 @@ const ICON = {
   timer: `<svg class="i" viewBox="0 -960 960 960"><path d="M390-860q-12.75 0-21.37-8.68-8.63-8.67-8.63-21.5 0-12.82 8.63-21.32 8.62-8.5 21.37-8.5h180q12.75 0 21.38 8.68 8.62 8.67 8.62 21.5 0 12.82-8.62 21.32-8.63 8.5-21.38 8.5H390Zm90.18 447q12.82 0 21.32-8.63 8.5-8.62 8.5-21.37v-170q0-12.75-8.68-21.38-8.67-8.62-21.5-8.62-12.82 0-21.32 8.62-8.5 8.63-8.5 21.38v170q0 12.75 8.68 21.37 8.67 8.63 21.5 8.63ZM480-81q-74 0-139.5-28.5T226-187q-49-49-77.5-114.5T120-441q0-74 28.5-139.5T226-695q49-49 114.5-77.5T480-801q67 0 126 22.5T711-716l30-30q9-9 21-9t21 9q9 9 9 21t-9 21l-30 30q36 40 61.5 97T840-441q0 74-28.5 139.5T734-187q-49 49-114.5 77.5T480-81Zm0-60q125 0 212.5-87.5T780-441q0-125-87.5-212.5T480-741q-125 0-212.5 87.5T180-441q0 125 87.5 212.5T480-141Zm0-299Z"/></svg>`,
   check: `<svg class="i" viewBox="0 -960 960 960"><path d="m421-389-98-98q-9-9-22-9t-23 10q-9 9-9 22t9 22l122 123q9 9 21 9t21-9l239-239q10-10 10-23t-10-23q-10-9-23.5-8.5T635-603L421-389Zm59 309q-82 0-155-31.5t-127.5-86Q143-252 111.5-325T80-480q0-83 31.5-156t86-127Q252-817 325-848.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 82-31.5 155T763-197.5q-54 54.5-127 86T480-80Z"/></svg>`,
   clock: `<svg class="i" viewBox="0 -960 960 960"><path d="M513-492v-171q0-13-8.5-21.5T483-693q-13 0-21.5 8.5T453-663v183q0 6 2 11t6 10l144 149q9 10 22.5 9.5T650-310q9-9 9-22t-9-22L513-492ZM480-80q-82 0-155-31.5t-127.5-86Q143-252 111.5-325T80-480q0-82 31.5-155t86-127.5Q252-817 325-848.5T480-880q82 0 155 31.5t127.5 86Q817-708 848.5-635T880-480q0 82-31.5 155t-86 127.5Q708-143 635-111.5T480-80Zm0-400Zm0 340q140 0 240-100t100-240q0-140-100-240T480-820q-140 0-240 100T140-480q0 140 100 240t240 100Z"/></svg>`,
-  bag: `<svg class="i" viewBox="0 -960 960 960"><path d="m192-565-92-97q-8-9-8-21t9-21q9-9 21.5-9t21.5 9l71 73-2-23q-2-14 2.5-26t14.5-22l118-120q8-8 19.5-13t23.5-5h178q12 0 23.5 5t19.5 13l118 120q10 10 14.5 22t2.5 26l-2 23 71-73q9-9 21.5-9t21.5 9q9 9 9 21t-8 21l-92 97H192Zm464 405H304q-23 0-40.5-16.5T244-216l-24-320h520l-24 320q-2 23-19.5 39.5T656-160Z"/></svg>`,
+  bag: `<svg class="i" viewBox="180 170 152 184"><path fill-rule="evenodd" d="M198 188L207.7 200L217.3 188L227 200L236.7 188L246.3 200L256 188L265.7 200L275.3 188L285 200L294.7 188L304.3 200L314 188V324a12 12 0 0 1-12 12H210a12 12 0 0 1-12-12ZM198 222h116v8H198z"/></svg>`,
 };
 const sid = location.pathname.split('/').pop();
 const STATUS = { SCHEDULED:'조리 대기', COOKING:'조리 중', READY:'준비 완료', PICKED_UP:'전달 완료', CANCELLED:'취소' };

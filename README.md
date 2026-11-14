@@ -1,3 +1,10 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/brand/wordmark-dark.svg">
+    <img alt="OnTime Pickup 온타임 픽업" src="assets/brand/wordmark-light.svg" width="560">
+  </picture>
+</p>
+
 # 온타임 픽업 (OnTime Pickup)
 
 **운전 중 음성 한 마디로 포장 주문을 넣으면, 내비게이션 도착 예정 시간에 맞춰 매장이 조리를 시작해 도착하는 순간 차 앞에서 받아 가는 차량용 픽업 앱.**
@@ -88,3 +95,10 @@ JAVA_HOME=<JDK 17 경로> ./gradlew assembleRelease
 ## 사용한 오픈소스 리소스
 - 글꼴: [Asta Sans](https://github.com/42dot/Asta-Sans) (SIL Open Font License 1.1, 라이선스 전문 `android/app/src/main/assets/fonts/AstaSans-OFL.txt`)
 - 아이콘: [Material Symbols](https://github.com/google/material-design-icons) Rounded (Apache License 2.0)
+
+## 브랜드
+
+| 로고 | 의미 |
+|---|---|
+| <img src="assets/brand/logo.svg" width="96"> | 줄어드는 링은 매장까지 남은 시간, 링 위의 흰 점은 다가오는 차, 가운데는 포장 종이봉투. 도착 시각에 맞춰 음식이 준비되는 순간을 한 장에 담았다. 색은 네이비 `#0E1A2B` · 민트 `#3CE0B4`, 글꼴은 Asta Sans. |
+
