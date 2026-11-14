@@ -38,6 +38,8 @@ class MainActivity : AppCompatActivity() {
     private var category: String? = null
     private var pending = false
     private var state: PickupService.OrderState = PickupService.OrderState.Idle
+    private val ringStart = HashMap<String, Int>()
+    private val ringShown = HashMap<String, Float>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -130,7 +132,7 @@ class MainActivity : AppCompatActivity() {
             etaChip.visibility = View.GONE
             return
         }
-        val color = if (active.estimated) p.textTertiary else p.active
+        val color = if (active.estimated) p.textTertiary else p.brand
         etaChip.background = Pleos.rounded(this, Pleos.withAlpha(color, 0.16f), 30f)
         etaChip.setPadding(dp(22), 0, dp(28), 0)
         etaChip.addView(
@@ -175,41 +177,60 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun pendingHero() {
-        hero.background = heroBackground(p.positive)
-        hero.addView(statusChip("주문 준비 중", p.positive), wrap())
+        hero.background = heroBackground(p.brand)
+        hero.addView(statusChip("주문 준비 중", p.brand), wrap())
         hero.addView(ProgressBar(this).apply {
             isIndeterminate = true
-            indeterminateTintList = Pleos.tint(p.positive)
+            indeterminateTintList = Pleos.tint(p.brand)
         }, LinearLayout.LayoutParams(dp(64), dp(64)).apply { topMargin = dp(36) })
         hero.addView(text("내비에서 매장까지 남은 시간을 확인하고 있어요", Type.TitleS, p.text, 2), match(top = 28))
         hero.addView(text("확인되면 도착 시간에 맞춰 조리 시작 시각이 정해져요", Type.BodyM, p.textSecondary, 2), match(top = 12))
         pushDown()
-        hero.addView(stepper(0, p.positive), match())
+        hero.addView(stepper(0, p.brand), match())
     }
 
     private fun activeHero(o: OrderView) {
         val color = statusColor(o.status)
         hero.background = heroBackground(color)
         hero.addView(statusChip(PickupService.statusKo(o.status), color), wrap())
-        hero.addView(text(o.storeName, Type.TitleS, p.text, 1), match(top = 28))
-        val eta = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
-        eta.addView(text(minutes(o.secToArrive).toString(), Type.HeadlineL, p.text, 1))
-        eta.addView(text("분 뒤 도착", Type.BodyLStrong, p.textSecondary, 1), wrap().apply { marginStart = dp(12) })
-        hero.addView(eta, match(top = 4))
-        hero.addView(text(cookLine(o), Type.BodyM, p.textSecondary, 2), match(top = 8))
-        hero.addView(stepper(stepOf(o.status), color), match(top = 44))
-        hero.addView(orderFacts(o), match(top = 40))
+        // 브랜드 로고와 같은 모양: 줄어드는 링 = 매장까지 남은 시간, 링 끝의 점 = 다가오는 차
+        val start = ringStart.getOrPut(o.id) { o.secToArrive }.let { maxOf(it, o.secToArrive) }
+        ringStart[o.id] = start
+        val row = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        val ringBox = FrameLayout(this)
+        ringBox.addView(CountdownRing(this, p.control, p.brand, p.text).apply {
+            setFraction(if (start > 0) o.secToArrive.toFloat() / start else 0f, ringShown[o.id])
+            ringShown[o.id] = if (start > 0) o.secToArrive.toFloat() / start else 0f
+        }, FrameLayout.LayoutParams(MATCH, MATCH))
+        val center = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER_HORIZONTAL
+        }
+        center.addView(text(minutes(o.secToArrive).toString(), Type.HeadlineL, p.text, 1), wrap())
+        center.addView(text("분 뒤 도착", Type.LabelMStrong, p.textTertiary, 1), wrap(top = 2))
+        ringBox.addView(center, FrameLayout.LayoutParams(WRAP, WRAP, Gravity.CENTER))
+        row.addView(ringBox, LinearLayout.LayoutParams(dp(196), dp(196)))
+        val col = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        col.addView(text(o.storeName, Type.TitleS, p.text, 1))
+        col.addView(text(cookLine(o), Type.BodyM, p.textSecondary, 3), match(top = 10))
+        row.addView(col, LinearLayout.LayoutParams(0, WRAP, 1f).apply { marginStart = dp(32) })
+        hero.addView(row, match(top = 24))
+        hero.addView(stepper(stepOf(o.status), color), match(top = 36))
+        hero.addView(orderFacts(o), match(top = 32))
         pushDown()
         hero.addView(button("주문 취소", R.drawable.ic_close, primary = false) { PickupService.cancel(this) }, match())
     }
 
     private fun arrivedHero(o: OrderView) {
-        hero.background = heroBackground(p.active)
-        hero.addView(statusChip("도착", p.active), wrap())
-        hero.addView(icon(R.drawable.ic_check_circle, p.active), LinearLayout.LayoutParams(dp(88), dp(88)).apply { topMargin = dp(32) })
+        hero.background = heroBackground(p.brand)
+        hero.addView(statusChip("도착", p.brand), wrap())
+        hero.addView(icon(R.drawable.ic_check_circle, p.brand), LinearLayout.LayoutParams(dp(88), dp(88)).apply { topMargin = dp(32) })
         hero.addView(text("매장에 도착을 알렸어요", Type.HeadlineS, p.text, 2), match(top = 20))
         hero.addView(text("${o.storeName} 직원이 차로 가져다 드려요", Type.BodyM, p.textSecondary, 2), match(top = 12))
-        hero.addView(stepper(3, p.active), match(top = 44))
+        hero.addView(stepper(3, p.brand), match(top = 44))
         pushDown()
         hero.addView(button("확인", null, primary = true) { PickupService.reset() }, match())
     }
@@ -313,8 +334,8 @@ class MainActivity : AppCompatActivity() {
         ).forEachIndexed { i, (res, title, sub) ->
             val cell = LinearLayout(this@MainActivity).apply { orientation = LinearLayout.VERTICAL }
             val tile = FrameLayout(this@MainActivity).apply {
-                background = Pleos.rounded(this@MainActivity, p.control, 20f)
-                addView(icon(res, p.textSecondary), FrameLayout.LayoutParams(dp(32), dp(32), Gravity.CENTER))
+                background = Pleos.rounded(this@MainActivity, Pleos.blend(p.brand, p.card, 0.14f), 20f)
+                addView(icon(res, p.brand), FrameLayout.LayoutParams(dp(32), dp(32), Gravity.CENTER))
             }
             cell.addView(tile, LinearLayout.LayoutParams(dp(60), dp(60)))
             cell.addView(text(title, Type.BodySStrong, p.text, 1), match(top = 16))
@@ -488,8 +509,8 @@ class MainActivity : AppCompatActivity() {
 
         val cta = TextView(this@MainActivity).apply {
             text = "주문"
-            pleos(Type.LabelMStrong, p.inverseText)
-            background = Pleos.rounded(this@MainActivity, p.inverse, 22f)
+            pleos(Type.LabelMStrong, p.brandOnFill)
+            background = Pleos.rounded(this@MainActivity, p.brandFill, 22f)
             setPadding(dp(24), dp(12), dp(24), dp(12))
         }
         addView(cta, LinearLayout.LayoutParams(WRAP, WRAP).apply { marginStart = dp(16) })
@@ -509,16 +530,17 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun categoryBadge(category: String, size: Int): View {
-        val (res, color) = when (category) {
-            "치킨" -> R.drawable.ic_cat_chicken to Color.parseColor("#FF8A00")
-            "피자" -> R.drawable.ic_cat_pizza to Color.parseColor("#FF4C28")
-            "중식" -> R.drawable.ic_cat_chinese to Color.parseColor("#FFC224")
-            "국밥" -> R.drawable.ic_cat_soup to Color.parseColor("#00B975")
-            else -> R.drawable.ic_store to p.positive
+        val res = when (category) {
+            "치킨" -> R.drawable.ic_cat_chicken
+            "피자" -> R.drawable.ic_cat_pizza
+            "중식" -> R.drawable.ic_cat_chinese
+            "국밥" -> R.drawable.ic_cat_soup
+            else -> R.drawable.ic_store
         }
+        val color = p.brand
         val glyph = (size * 0.55f).toInt()
         return FrameLayout(this).apply {
-            background = Pleos.rounded(this@MainActivity, Pleos.blend(color, p.card, 0.18f), size * 0.3f)
+            background = Pleos.rounded(this@MainActivity, Pleos.blend(color, p.card, 0.14f), size * 0.3f)
             addView(icon(res, color), FrameLayout.LayoutParams(dp(glyph), dp(glyph), Gravity.CENTER))
         }
     }
@@ -571,10 +593,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun statusColor(status: String) = when (status) {
-        "SCHEDULED" -> p.positive
+        "SCHEDULED" -> p.brand
         "COOKING" -> p.cooking
         "CANCELLED" -> p.textTertiary
-        else -> p.active
+        else -> p.brand
     }
 
     private fun stepOf(status: String) = when (status) {
@@ -603,9 +625,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun button(label: String, iconRes: Int?, primary: Boolean, onClick: () -> Unit): View {
-        val normal = if (primary) p.inverse else p.control
-        val pressed = if (primary) p.inversePressed else p.controlPressed
-        val fg = if (primary) p.inverseText else p.text
+        val normal = if (primary) p.brandFill else p.control
+        val pressed = if (primary) p.brandFillPressed else p.controlPressed
+        val fg = if (primary) p.brandOnFill else p.text
         return LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER

@@ -11,7 +11,9 @@
     --canvas:#F7F8FA; --card:#FFFFFF; --control:#EDEEF2; --control-pressed:#E0E1E6; --outline:rgba(19,20,23,.08);
     --text:#131417; --text2:rgba(19,20,23,.84); --text3:rgba(19,20,23,.64); --text4:rgba(19,20,23,.32);
     --inverse:#313236; --inverse-text:#FFFFFF;
-    --wait:#0064FF; --cook:#FF8A00; --ready:#02C265; --negative:#FE3D16;
+    /* OnTime Pickup 브랜드: 네이비 + 민트 (assets/brand) */
+    --brand:#12A882; --brand-fill:#0E1A2B; --brand-on:#FFFFFF; --ring-track:#E3E7EC;
+    --wait:var(--brand); --cook:#FF8A00; --ready:#0E1A2B; --negative:#FE3D16;
     --shadow:0 6px 24px rgba(0,0,0,.08);
   }
   @media (prefers-color-scheme: dark) {
@@ -19,7 +21,8 @@
       --canvas:#131417; --card:#1D1E21; --control:#313236; --control-pressed:#44464E; --outline:rgba(255,255,255,.08);
       --text:#FFFFFF; --text2:rgba(255,255,255,.84); --text3:rgba(255,255,255,.64); --text4:rgba(255,255,255,.32);
       --inverse:#EDEEF2; --inverse-text:#131417;
-      --wait:#0082FF; --cook:#FF8A00; --ready:#00E074; --negative:#FF4C28;
+      --brand:#3CE0B4; --brand-fill:#3CE0B4; --brand-on:#0E1A2B; --ring-track:#2A2D33;
+      --wait:var(--brand); --cook:#FF8A00; --ready:#E8FFF7; --negative:#FF4C28;
       --shadow:0 8px 32px rgba(0,0,0,.16);
     }
   }
@@ -58,7 +61,9 @@
   .chip .dot { width:12px; height:12px; border-radius:50%; background:var(--accent); }
   .items { margin:12px 0 0; font-size:22px; color:var(--text3); }
 
-  .hero { margin-top:24px; }
+  .hero { margin-top:24px; display:flex; align-items:center; gap:24px; }
+  .ring { width:112px; height:112px; flex:none; }
+  .ring circle, .ring path { transition:stroke-dasharray .9s ease-out; }
   .hero .label { font-size:22px; font-weight:700; color:var(--text3); }
   .hero .big { font-size:72px; font-weight:800; line-height:1.05; letter-spacing:-1px; font-variant-numeric:tabular-nums; margin-top:4px; }
   .hero .big.word { font-size:56px; letter-spacing:-.5px; }
@@ -92,9 +97,9 @@
   .btns { display:flex; gap:12px; margin-top:24px; }
   button { flex:1; height:68px; border:0; border-radius:20px; font:700 22px "Asta Sans",sans-serif; cursor:pointer;
            background:var(--control); color:var(--text); transition:transform .09s, background .15s; }
-  button.primary { background:var(--inverse); color:var(--inverse-text); }
+  button.primary { background:var(--brand-fill); color:var(--brand-on); }
   button:active { transform:scale(.95); background:var(--control-pressed); }
-  button.primary:active { background:var(--inverse); opacity:.86; }
+  button.primary:active { background:var(--brand-fill); opacity:.86; }
 
   .empty { grid-column:1/-1; display:flex; flex-direction:column; align-items:center; gap:16px; padding:96px 0; color:var(--text3); font-size:26px; font-weight:700; }
   .empty svg { font-size:72px; color:var(--text4); }
@@ -137,7 +142,26 @@ function shift(o) {
     : `<div class="shift early">${ICON.timer}도착 ${-d}분 빨라짐 · 조리 시작을 당김</div>`;
 }
 
+const RING_START = {};
+// 로고와 같은 카운트다운 링: 12시부터 시계 방향으로 남은 비율, 끝의 점 = 다가오는 차
+function ring(frac, color, inner='') {
+  frac = Math.max(0, Math.min(1, frac));
+  const r = 46, c = 2*Math.PI*r, a = (-90 + 360*frac) * Math.PI/180;
+  return `<svg class="ring" viewBox="0 0 112 112"><circle cx="56" cy="56" r="${r}" fill="none" stroke="var(--ring-track)" stroke-width="12"/>
+    <circle cx="56" cy="56" r="${r}" fill="none" stroke="${color}" stroke-width="12" stroke-linecap="round"
+      stroke-dasharray="${(c*frac).toFixed(1)} ${c.toFixed(1)}" transform="rotate(-90 56 56)"/>
+    <circle cx="${(56 + r*Math.cos(a)).toFixed(1)}" cy="${(56 + r*Math.sin(a)).toFixed(1)}" r="9" fill="var(--text)"/>${inner}</svg>`;
+}
 function hero(o) {
+  const body = heroText(o);
+  let fr = 1, col = 'var(--brand)';
+  if (o.status === 'SCHEDULED') { const k = o.id+':s'; RING_START[k] = Math.max(RING_START[k]||0, o.secToCookStart, 1); fr = o.secToCookStart / RING_START[k]; }
+  else if (o.status === 'COOKING') { fr = (o.cookingSince + o.prepSec - o.now) / o.prepSec; col = 'var(--cook)'; }
+  else if (o.status !== 'READY') return `<div>${body}</div>`;
+  return ring(fr, col) + `<div>${body}</div>`;
+}
+
+function heroText(o) {
   if (o.status === 'SCHEDULED') return `<div class="label">조리 시작까지</div><div class="big">${mmss(o.secToCookStart)}</div>`;
   if (o.status === 'COOKING') return `<div class="label">조리 완료까지</div><div class="big">${mmss(o.cookingSince + o.prepSec - o.now)}</div>`;
   if (o.status === 'READY') return `<div class="label">따뜻할 때 전달하세요</div><div class="big word">준비 완료</div>`;

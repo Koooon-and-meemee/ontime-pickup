@@ -41,6 +41,11 @@ object Pleos {
         val gleoTo: Int,
         val gleoText: Int,
         val toast: Int,
+        // OnTime Pickup 브랜드 (assets/brand): 네이비 + 민트. 진행·주요 버튼에만 쓴다.
+        val brand: Int,
+        val brandFill: Int,
+        val brandFillPressed: Int,
+        val brandOnFill: Int,
     )
 
     private val dark = Palette(
@@ -66,6 +71,10 @@ object Pleos {
         gleoTo = color("#545F93"),
         gleoText = color("#FFFFFF"),
         toast = color("#2B2C30"),
+        brand = color("#3CE0B4"),
+        brandFill = color("#3CE0B4"),
+        brandFillPressed = color("#2CC49C"),
+        brandOnFill = color("#0E1A2B"),
     )
 
     private val light = Palette(
@@ -91,6 +100,10 @@ object Pleos {
         gleoTo = color("#9BA8E2"),
         gleoText = color("#131417"),
         toast = color("#313236"),
+        brand = color("#12A882"),
+        brandFill = color("#0E1A2B"),
+        brandFillPressed = color("#1E3350"),
+        brandOnFill = color("#FFFFFF"),
     )
 
     enum class Type(val size: Float, val weight: Int) {

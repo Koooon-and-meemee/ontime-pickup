@@ -12,13 +12,13 @@
 현대자동차그룹 차량용 앱 개발 공모전(Pleos Playground) 출품작 · 대학생 부문 · 개인 참가(박상원)
 
 - APK: [`apk/박상원_OnTimePickup_release.apk`](apk/)
-- 시연 영상: [`demo/OnTimePickup_demo.mp4`](demo/OnTimePickup_demo.mp4) (2분 9초: Pleos Connect 에뮬레이터 실제 주문 → 매장 대시보드 → 정체 시나리오 30배속)
+- 시연 영상: [`demo/OnTimePickup_demo.mp4`](demo/OnTimePickup_demo.mp4) (1분 27초, 한국어 내레이션: Pleos Connect 에뮬레이터 실제 주문 → 매장 대시보드 → 정체 시나리오 30배속)
 
-| 차량 화면 (Pleos Connect Emulator) | 매장 대시보드 |
+| 차량 화면 (Pleos Connect Emulator, 실제 내비 ETA) | 매장 대시보드 (정체 시나리오, 30배속) |
 |---|---|
 | ![차량 화면](demo/app_order.png) | ![매장 대시보드](demo/store_dashboard.png) |
 
-에뮬레이터에서 주문하면 NaviHelper가 실제로 매장까지 경로를 잡고, 내비가 준 남은 시간(위 화면은 660초 = 11분)으로 조리 시작 시각이 정해진다.
+에뮬레이터에서 주문하면 NaviHelper가 실제로 매장까지 경로를 잡고, 내비가 준 남은 시간(위 화면은 8분)으로 조리 시작 시각이 정해진다. 가운데 링은 로고와 같은 모양으로, 매장까지 남은 시간만큼 줄어든다.
 
 ## 어떻게 동작하나
 1. 주차 중에 매장·메뉴를 골라 즐겨찾기로 저장해 둡니다.
