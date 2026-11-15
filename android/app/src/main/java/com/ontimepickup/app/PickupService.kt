@@ -43,16 +43,18 @@ class PickupService : Service() {
         when (intent?.action) {
             ACTION_ORDER -> {
                 val storeId = intent.getStringExtra(EXTRA_STORE) ?: return START_NOT_STICKY
-                val itemId = intent.getStringExtra(EXTRA_ITEM) ?: return START_NOT_STICKY
+                val itemIds = intent.getStringArrayListExtra(EXTRA_ITEMS)
+                    ?: intent.getStringExtra(EXTRA_ITEM)?.let { arrayListOf(it) }
+                    ?: return START_NOT_STICKY
                 job?.cancel()
-                job = scope.launch { runOrder(storeId, itemId) }
+                job = scope.launch { runOrder(storeId, itemIds) }
             }
             ACTION_CANCEL -> scope.launch { cancelOrder() }
         }
         return START_NOT_STICKY
     }
 
-    private suspend fun runOrder(storeId: String, itemId: String) {
+    private suspend fun runOrder(storeId: String, itemIds: List<String>) {
         val store = runCatching { Api.stores().first { it.id == storeId } }.getOrElse {
             publish(OrderState.Error("매장 정보를 불러오지 못했습니다"))
             return
@@ -64,8 +66,8 @@ class PickupService : Service() {
         val estimated = firstRemain == null
         var remain = firstRemain ?: FALLBACK_REMAIN_SEC
 
-        val order = runCatching { Api.createOrder(store.id, itemId, Favorites.carPlate(this), remain) }.getOrElse {
-            publish(OrderState.Error("주문 전송 실패: 네트워크를 확인하세요"))
+        val order = runCatching { Api.createOrder(store.id, itemIds, Favorites.carPlate(this), remain) }.getOrElse {
+            publish(OrderState.Error("주문 전송 실패 · 네트워크 확인 필요"))
             return
         }
         orderId = order.id
@@ -155,6 +157,7 @@ class PickupService : Service() {
         const val ACTION_CANCEL = "com.ontimepickup.app.CANCEL"
         const val EXTRA_STORE = "store"
         const val EXTRA_ITEM = "item"
+        const val EXTRA_ITEMS = "items"
 
         private val _state = MutableStateFlow<OrderState>(OrderState.Idle)
         val state: StateFlow<OrderState> = _state
@@ -164,12 +167,15 @@ class PickupService : Service() {
             _state.value = s
         }
 
-        fun order(context: Context, storeId: String, itemId: String) {
+        fun order(context: Context, storeId: String, itemId: String) = order(context, storeId, listOf(itemId))
+
+        /** 장바구니 주문. 수량은 같은 메뉴 id를 반복해서 보낸다. */
+        fun order(context: Context, storeId: String, itemIds: List<String>) {
             context.startForegroundService(
                 Intent(context, PickupService::class.java)
                     .setAction(ACTION_ORDER)
                     .putExtra(EXTRA_STORE, storeId)
-                    .putExtra(EXTRA_ITEM, itemId),
+                    .putStringArrayListExtra(EXTRA_ITEMS, ArrayList(itemIds)),
             )
         }
 

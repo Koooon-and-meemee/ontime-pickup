@@ -2,7 +2,7 @@ package com.ontimepickup.app
 
 import android.content.Context
 
-/** "늘 먹던 거" 즐겨찾기와 차량 번호. 주행 중 음성 주문은 이 값만으로 끝나야 하므로 주차 중에 미리 저장해 둔다. */
+/** 즐겨찾기(음성으로는 "늘 먹던 거")와 차량 번호. 주행 중 음성 주문은 이 값만으로 끝나야 하므로 주차 중에 미리 저장해 둔다. */
 object Favorites {
     private const val PREFS = "favorites"
 

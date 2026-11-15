@@ -7,17 +7,27 @@ import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
 
-data class MenuItem(val id: String, val name: String, val price: Int)
+data class MenuItem(
+    val id: String,
+    val name: String,
+    val price: Int,
+    val group: String = "",
+    val desc: String = "",
+    val popular: Boolean = false,
+)
 
 data class Store(
     val id: String,
     val name: String,
     val category: String,
     val prepMin: Int,
+    val prepMax: Int,
     val lat: Double,
     val lng: Double,
     val address: String,
     val menu: List<MenuItem>,
+    val rating: Double = 0.0,
+    val reviews: Int = 0,
 )
 
 data class OrderView(
@@ -38,11 +48,11 @@ object Api {
         (0 until arr.length()).map { i -> parseStore(arr.getJSONObject(i)) }
     }
 
-    suspend fun createOrder(storeId: String, itemId: String, carPlate: String, remainSec: Int): OrderView =
+    suspend fun createOrder(storeId: String, itemIds: List<String>, carPlate: String, remainSec: Int): OrderView =
         withContext(Dispatchers.IO) {
             val body = JSONObject()
                 .put("storeId", storeId)
-                .put("itemIds", JSONArray().put(itemId))
+                .put("itemIds", JSONArray(itemIds))
                 .put("carPlate", carPlate)
                 .put("remainTimeSec", remainSec)
             parseOrder(JSONObject(request("POST", "/orders", body)))
@@ -85,13 +95,19 @@ object Api {
             name = o.getString("name"),
             category = o.getString("category"),
             prepMin = o.getInt("prepMin"),
+            prepMax = o.optInt("prepMax", o.getInt("prepMin")),
             lat = o.getDouble("lat"),
             lng = o.getDouble("lng"),
             address = o.getString("address"),
             menu = (0 until menu.length()).map { i ->
                 val m = menu.getJSONObject(i)
-                MenuItem(m.getString("id"), m.getString("name"), m.getInt("price"))
+                MenuItem(
+                    m.getString("id"), m.getString("name"), m.getInt("price"),
+                    group = m.optString("group"), desc = m.optString("desc"), popular = m.optBoolean("popular"),
+                )
             },
+            rating = o.optDouble("rating", 0.0),
+            reviews = o.optInt("reviews", 0),
         )
     }
 

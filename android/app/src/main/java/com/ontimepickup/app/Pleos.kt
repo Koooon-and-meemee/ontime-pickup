@@ -177,21 +177,38 @@ fun View.elevate(level: Int) {
     outlineAmbientShadowColor = Pleos.color("#14000000")
 }
 
-/** 모든 터치 요소: 누르는 동안 95%로 줄고 배경이 한 단계 진해진다. 손가락이 영역을 벗어나면 클릭은 취소된다. */
+/** 모든 터치 요소: 누르는 동안 97%로 살짝 가라앉고 배경이 한 단계 진해진다. 손가락이 영역을 벗어나면 클릭은 취소된다. */
 fun View.pressable(normal: Int, pressed: Int) {
     setOnTouchListener { view, event ->
         val bg = view.background as? GradientDrawable
         when (event.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
-                view.animate().scaleX(0.95f).scaleY(0.95f).setDuration(90).start()
+                view.animate().scaleX(0.97f).scaleY(0.97f).setDuration(120).setInterpolator(Motion.standard).start()
                 bg?.setColor(pressed)
             }
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                view.animate().scaleX(1f).scaleY(1f).setDuration(160).start()
+                view.animate().scaleX(1f).scaleY(1f).setDuration(280).setInterpolator(Motion.emphasized).start()
                 bg?.setColor(normal)
             }
         }
         false
+    }
+}
+
+/** 앱 전체가 같은 곡선을 쓴다. 빠르게 출발해 길게 감속 = 무겁고 매끄러운 느낌. */
+object Motion {
+    val emphasized = android.view.animation.PathInterpolator(0.2f, 0f, 0f, 1f)
+    val standard = android.view.animation.PathInterpolator(0.4f, 0f, 0.2f, 1f)
+
+    /** 아래에서 떠오르며 나타난다. 여러 개면 순서대로 조금씩 늦게. */
+    fun rise(views: List<View>, distanceDp: Float = 24f, stagger: Long = 55, duration: Long = 520) {
+        views.forEachIndexed { i, v ->
+            v.animate().cancel()
+            v.alpha = 0f
+            v.translationY = Pleos.dp(v.context, distanceDp)
+            v.animate().alpha(1f).translationY(0f)
+                .setStartDelay(i * stagger).setDuration(duration).setInterpolator(emphasized).start()
+        }
     }
 }
 

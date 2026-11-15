@@ -205,7 +205,7 @@ async function tick() {
     const [stores, orders] = await Promise.all([
       fetch('/stores').then(r=>r.json()), fetch(`/stores/${sid}/orders`).then(r=>r.json())]);
     const s = stores.find(x=>x.id===sid);
-    if (s) document.getElementById('store').textContent = `${s.name} · 평균 조리 ${s.prepMin}분`;
+    if (s) document.getElementById('store').textContent = `${s.name} · 조리 ${s.prepMin}–${s.prepMax ?? s.prepMin}분`;
     const live = orders.filter(o => o.status !== 'CANCELLED');
     document.getElementById('counts').innerHTML = counts(live);
     document.getElementById('list').innerHTML = live.length ? live.map(card).join('')
