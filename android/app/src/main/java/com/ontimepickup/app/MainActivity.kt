@@ -317,8 +317,15 @@ class MainActivity : AppCompatActivity() {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER_HORIZONTAL
         }
-        center.addView(text(minutes(o.secToArrive).toString(), Type.HeadlineL, p.text, 1), wrap())
-        center.addView(text("분 뒤 도착", Type.LabelMStrong, p.textTertiary, 1), wrap(top = 2))
+        // 큰 숫자 + 오른쪽에 작은 "분", 아랫줄에 "남음"
+        val value = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            isBaselineAligned = true
+            addView(text(minutes(o.secToArrive).toString(), Type.HeadlineL, p.text, 1), wrap())
+            addView(text("분", Type.BodyMStrong, p.textSecondary, 1), wrap().apply { marginStart = dp(4) })
+        }
+        center.addView(value, wrap())
+        center.addView(text("남음", Type.LabelMStrong, p.textTertiary, 1), wrap(top = 0))
         ringBox.addView(center, FrameLayout.LayoutParams(WRAP, WRAP, Gravity.CENTER))
         row.addView(ringBox, LinearLayout.LayoutParams(dp(196), dp(196)))
         val col = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
